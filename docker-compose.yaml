@@ -1,0 +1,35 @@
+version: '3.7'
+
+networks:
+  wp-network-isolated:
+    driver: bridge
+
+services:
+  wordpress:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.wordpress
+    depends_on:
+      - wp-database
+    networks:
+      - wp-network-isolated
+
+  wp-database:
+    image: mysql:8.3
+    restart: always
+    env_file: .env
+    networks:
+      - wp-network-isolated
+
+  proxy:
+     depends_on:
+       - wordpress
+     restart: always
+     image: nginx:1.25
+     volumes:
+       - ./nginx.conf:/etc/nginx/nginx.conf
+     ports:
+       - "80:80"
+     networks:
+       - wp-network-isolated

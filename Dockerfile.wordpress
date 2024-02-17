@@ -1,0 +1,30 @@
+# with help of
+# https://ubuntu.com/tutorials/install-and-configure-wordpress#1-overview
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget=1.21.2-2ubuntu1 \
+    apache2=2.4.52-1ubuntu4.7 \
+    php=2:8.1+92ubuntu1 \
+    php-mysql=2:8.1+92ubuntu1 \
+    && apt clean all \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /srv/www \
+    && chown www-data: /srv/www
+
+RUN wget --no-check-certificate -O /tmp/wordpress.tar.gz https://wordpress.org/latest.tar.gz \
+    && tar -xz -C /srv/www -f /tmp/wordpress.tar.gz \
+    && chown -R www-data: /srv/www \
+    && rm /tmp/wordpress.tar.gz
+
+COPY wordpress.conf /etc/apache2/sites-available/wordpress.conf
+
+RUN a2ensite wordpress \
+    && a2enmod rewrite \
+    && a2dissite 000-default
+
+CMD ["apache2ctl", "-D", "FOREGROUND"]
